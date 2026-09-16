@@ -1,0 +1,15 @@
+name : todo CI
+
+on: 
+  push :
+
+jobs:
+  First-job:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Helloo"
+
+        
+        
+
+      
