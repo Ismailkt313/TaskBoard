@@ -1,0 +1,14 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./backend/.env
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+  frontend:
+    build: ./frontend
+    ports:
+      - "4173:4173"
