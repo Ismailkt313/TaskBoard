@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: todo-backend
+spec:
+  containers:
+    - name: todo-backend
+      image: todo-backend
+      ports:
+        - containerPort: 5000
+      env:
+        - name: MONGODB_URI
+          valueFrom:
+            secretKeyRef:
+              name: todo-backend-secret
+              key: MONGODB_URI
