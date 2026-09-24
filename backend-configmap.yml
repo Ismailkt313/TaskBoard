@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: todo-backend-config
+data:
+  NODE_ENV: production
+  API_VERSION: v1
