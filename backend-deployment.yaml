@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: todo-backend
+  name: todo-backend-deployment
 spec:
   replicas: 1
   selector:
@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: todo-backend
-          image: todo-backend
+          image: ismail313/todo-backend:v1
           ports:
             - containerPort: 5000
           envFrom:
