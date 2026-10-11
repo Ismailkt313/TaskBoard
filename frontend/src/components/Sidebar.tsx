@@ -17,6 +17,7 @@ interface SidebarProps {
   onDeleteFolder: (id: string) => void;
   isMobileOpen: boolean;
   onCloseMobile: () => void;
+  onOpenInstallModal?: () => void;
 }
 
 export default function Sidebar({
@@ -32,7 +33,8 @@ export default function Sidebar({
   onRenameFolder,
   onDeleteFolder,
   isMobileOpen,
-  onCloseMobile
+  onCloseMobile,
+  onOpenInstallModal
 }: SidebarProps) {
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
@@ -108,11 +110,12 @@ export default function Sidebar({
         {/* Brand Header */}
         <div className="sidebar__brand">
           <div className="sidebar__logo-container">
-            <div className="sidebar__logo">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 11l3 3L22 4" />
-                <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
-              </svg>
+            <div className="sidebar__logo-wrap">
+              <img
+                src="/todo.png"
+                alt="TaskBoard App Logo"
+                className="sidebar__logo-img"
+              />
             </div>
             <div>
               <h2 className="sidebar__brand-name">TaskBoard</h2>
@@ -368,6 +371,22 @@ export default function Sidebar({
 
         {/* Footer info */}
         <div className="sidebar__footer">
+          {onOpenInstallModal && (
+            <button
+              type="button"
+              className="sidebar__install-btn"
+              onClick={onOpenInstallModal}
+              title="Download TaskBoard App for Laptop"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                <line x1="8" y1="21" x2="16" y2="21" />
+                <line x1="12" y1="17" x2="12" y2="21" />
+              </svg>
+              <span>Download for Laptop</span>
+              <span className="sidebar__install-badge">App</span>
+            </button>
+          )}
           <div className="sidebar__footer-status">
             <span className="sidebar__footer-dot" />
             <span className="sidebar__footer-text">TaskBoard Cloud Sync</span>

@@ -38,6 +38,15 @@ interface Toast {
   type: "success" | "error" | "info";
 }
 
+interface BeforeInstallPromptEvent extends Event {
+  readonly platforms: string[];
+  readonly userChoice: Promise<{
+    outcome: "accepted" | "dismissed";
+    platform: string;
+  }>;
+  prompt(): Promise<void>;
+}
+
 export default function App() {
   const [folders, setFolders] = useState<Folder[]>([]);
   const [allTodos, setAllTodos] = useState<Todo[]>([]);
@@ -59,6 +68,11 @@ export default function App() {
   const [showDeleteMarkedModal, setShowDeleteMarkedModal] = useState(false);
   const [showDeleteSelectedModal, setShowDeleteSelectedModal] = useState(false);
 
+  // PWA Download / Laptop Install
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [showInstallModal, setShowInstallModal] = useState(false);
+  const [isAppInstalled, setIsAppInstalled] = useState(false);
+
   // Toast notification helper
   const showToast = useCallback((message: string, type: "success" | "error" | "info" = "info") => {
     const id = Date.now();
@@ -67,6 +81,66 @@ export default function App() {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 3500);
   }, []);
+
+  // Listen for PWA Installability on Desktop / Laptop
+  useEffect(() => {
+    const handleBeforeInstall = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
+    };
+
+    const handleAppInstalled = () => {
+      setIsAppInstalled(true);
+      setDeferredPrompt(null);
+      showToast("TaskBoard installed on your computer successfully!", "success");
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstall);
+    window.addEventListener("appinstalled", handleAppInstalled);
+
+    if (window.matchMedia("(display-mode: standalone)").matches) {
+      setIsAppInstalled(true);
+    }
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
+      window.removeEventListener("appinstalled", handleAppInstalled);
+    };
+  }, [showToast]);
+
+  const handleTriggerInstall = async () => {
+    if (deferredPrompt) {
+      try {
+        await deferredPrompt.prompt();
+        const choice = await deferredPrompt.userChoice;
+        if (choice.outcome === "accepted") {
+          setIsAppInstalled(true);
+          setShowInstallModal(false);
+          showToast("TaskBoard installed to your laptop!", "success");
+        }
+        setDeferredPrompt(null);
+      } catch (err) {
+        console.error("Install prompt error:", err);
+      }
+    } else {
+      setShowInstallModal(true);
+    }
+  };
+
+  const handleDownloadDesktopShortcut = () => {
+    const currentOrigin = window.location.origin;
+    const shortcutContent = `[InternetShortcut]\r\nURL=${currentOrigin}/\r\nIconIndex=0\r\nIconFile=${currentOrigin}/todo.png\r\nHotKey=0\r\n[{000214A0-0000-0000-C000-000000000046}]\r\nProp3=19,11\r\n`;
+    const blob = new Blob([shortcutContent], { type: "application/internet-shortcut" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "TaskBoard.url";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast("Downloaded TaskBoard desktop shortcut! Move it to your desktop for quick launch.", "success");
+  };
 
   // Manual reload (e.g. on retry)
   const loadInitialData = useCallback(async () => {
@@ -601,6 +675,7 @@ export default function App() {
         }}
         isMobileOpen={isMobileSidebarOpen}
         onCloseMobile={() => setIsMobileSidebarOpen(false)}
+        onOpenInstallModal={() => setShowInstallModal(true)}
       />
 
       {/* Main Content Area */}
@@ -1098,6 +1173,115 @@ export default function App() {
               >
                 Delete {selectedIds.size} Task
                 {selectedIds.size === 1 ? "" : "s"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal for Downloading / Installing on Laptop */}
+      {showInstallModal && (
+        <div
+          className="modal-backdrop"
+          onClick={() => setShowInstallModal(false)}
+        >
+          <div
+            className="modal-card modal-card--laptop-install"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-labelledby="install-modal-title"
+          >
+            <div className="laptop-install-header">
+              <div className="laptop-install-logo-wrap">
+                <img
+                  src="/todo.png"
+                  alt="TaskBoard App Logo"
+                  className="laptop-install-logo"
+                />
+              </div>
+              <div className="laptop-install-header-text">
+                <h3 id="install-modal-title" className="laptop-install-title">
+                  Install TaskBoard on Laptop
+                </h3>
+                <p className="laptop-install-desc">
+                  Run TaskBoard as a desktop application on your Windows or Mac laptop with instant startup and offline capability.
+                </p>
+              </div>
+            </div>
+
+            <div className="laptop-install-actions">
+              {deferredPrompt ? (
+                <button
+                  type="button"
+                  className="laptop-install-btn laptop-install-btn--primary"
+                  onClick={handleTriggerInstall}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                  <span>Install App on Laptop (1-Click)</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="laptop-install-btn laptop-install-btn--primary"
+                  onClick={handleDownloadDesktopShortcut}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                    <line x1="8" y1="21" x2="16" y2="21" />
+                    <line x1="12" y1="17" x2="12" y2="21" />
+                  </svg>
+                  <span>Download Desktop Shortcut (.url)</span>
+                </button>
+              )}
+
+              <button
+                type="button"
+                className="laptop-install-btn laptop-install-btn--secondary"
+                onClick={handleDownloadDesktopShortcut}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                <span>Save Windows / Mac Shortcut</span>
+              </button>
+            </div>
+
+            <div className="laptop-install-guide">
+              <h4 className="laptop-install-guide-title">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="16" x2="12" y2="12" />
+                  <line x1="12" y1="8" x2="12.01" y2="8" />
+                </svg>
+                How to install in browser on Laptop:
+              </h4>
+              <ol className="laptop-install-steps">
+                <li>
+                  <strong>Chrome & Brave:</strong> Click the <em>Install icon</em> (⊕) on the right side of your address bar, or click Menu (⋮) → <em>"Save and share"</em> → <em>"Install TaskBoard"</em>.
+                </li>
+                <li>
+                  <strong>Microsoft Edge:</strong> Click the <em>App available</em> icon (⊞) in the address bar, or click (...) → <em>Apps</em> → <em>"Install this site as an app"</em>.
+                </li>
+                <li>
+                  <strong>Instant Desktop Launcher:</strong> Click <em>"Download Desktop Shortcut"</em> above to get a direct desktop shortcut on your laptop.
+                </li>
+              </ol>
+            </div>
+
+            <div className="modal-card__actions" style={{ marginTop: "16px" }}>
+              <button
+                type="button"
+                className="modal-card__btn-cancel"
+                style={{ width: "100%", justifyContent: "center" }}
+                onClick={() => setShowInstallModal(false)}
+              >
+                Close
               </button>
             </div>
           </div>

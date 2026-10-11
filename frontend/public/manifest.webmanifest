@@ -1,0 +1,20 @@
+{
+  "name": "TaskBoard - Task & Productivity Manager",
+  "short_name": "TaskBoard",
+  "description": "Smart, fast task management with folders, subtasks, and priority tracking on your laptop.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/todo.png",
+      "sizes": "192x192 512x512 1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
