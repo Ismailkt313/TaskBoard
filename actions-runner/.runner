@@ -1,0 +1,11 @@
+﻿{
+  "agentId": 21,
+  "agentName": "DESKTOP-0QBTPNO",
+  "poolId": 1,
+  "poolName": "Default",
+  "serverUrl": "https://pipelinesghubeus21.actions.githubusercontent.com/jQrXp7DHr6xcATw32O8zvb6SgBbZ2b1ZnOB0xpsytqLAOXeHq4/",
+  "gitHubUrl": "https://github.com/Ismailkt313/TaskBoard",
+  "workFolder": "_work",
+  "useV2Flow": true,
+  "serverUrlV2": "https://broker.actions.githubusercontent.com/"
+}

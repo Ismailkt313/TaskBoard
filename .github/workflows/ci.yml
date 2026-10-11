@@ -75,3 +75,17 @@ jobs:
           context: ./backend
           push: true
           tags: ismail313/todo-backend:${{github.sha}}
+  deploy:
+    runs-on: self-hosted
+    needs: docker
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Deploy to Kubernetes
+        run: kubectl set image deployment/todo-backend-deployment todo-backend=ismail313/todo-backend:${{ github.sha }}
+
+      - name: Wait for rollout
+        run: kubectl rollout status deployment/todo-backend-deployment
