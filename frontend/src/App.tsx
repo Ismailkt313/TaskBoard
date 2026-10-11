@@ -71,7 +71,6 @@ export default function App() {
   // PWA Download / Laptop Install
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallModal, setShowInstallModal] = useState(false);
-  const [isAppInstalled, setIsAppInstalled] = useState(false);
 
   // Toast notification helper
   const showToast = useCallback((message: string, type: "success" | "error" | "info" = "info") => {
