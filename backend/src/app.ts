@@ -8,8 +8,14 @@ env.config()
 
 const app = express();
 
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL
+  origin: [
+    process.env.FRONTEND_URL || process.env.VITE_URL || "http://localhost:5173",
+    "https://task-board-lime-seven.vercel.app"
+  ],
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
 app.use(express.json());
